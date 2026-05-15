@@ -264,6 +264,7 @@ private fun VideoGrid(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun VideoCard(
     video: VideoEntity,

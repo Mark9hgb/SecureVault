@@ -7,6 +7,7 @@ import androidx.media3.datasource.DataSpec
 import com.vaultapp.securevault.security.CryptoManager
 import java.io.IOException
 import java.io.File
+import java.io.InputStream
 
 class EncryptedVideoDataSource(
     private val cryptoManager: CryptoManager
