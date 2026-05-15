@@ -8,14 +8,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.vaultapp.securevault.data.database.VideoEntity
+import com.vaultapp.securevault.data.SecureVideoRepository
 import com.vaultapp.securevault.media.EncryptedVideoDataSource
 import com.vaultapp.securevault.security.SecurityAuthManager
 import com.vaultapp.securevault.ui.screens.AuthScreen
@@ -23,6 +21,7 @@ import com.vaultapp.securevault.ui.screens.VaultDashboardScreen
 import com.vaultapp.securevault.ui.screens.VideoPlayerScreen
 import com.vaultapp.securevault.ui.viewmodel.PlayerViewModel
 import com.vaultapp.securevault.ui.viewmodel.VaultViewModel
+import kotlinx.coroutines.runBlocking
 
 @Composable
 fun AppNavigation(
@@ -60,15 +59,7 @@ fun AppNavigation(
             ) { backStackEntry ->
                 val videoId = backStackEntry.arguments?.getLong("videoId") ?: return@composable
                 val playerViewModel: PlayerViewModel = hiltViewModel()
-
-                val navBackStackEntry by rememberNavController().currentBackStackEntryAsState()
-                val parentEntry = rememberNavController().previousBackStackEntry
-                val vaultViewModel: VaultViewModel = if (parentEntry != null) {
-                    hiltViewModel(parentEntry)
-                } else {
-                    hiltViewModel()
-                }
-
+                val vaultViewModel: VaultViewModel = hiltViewModel()
                 val videos by vaultViewModel.videos.collectAsState()
                 val video = videos.find { it.id == videoId }
 

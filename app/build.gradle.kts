@@ -36,9 +36,6 @@ android {
                 "proguard-rules.pro"
             )
         }
-        debug {
-            isDebuggable = false
-        }
     }
 
     compileOptions {

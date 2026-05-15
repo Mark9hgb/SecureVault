@@ -34,7 +34,10 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.FileDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
@@ -57,9 +60,10 @@ fun VideoPlayerScreen(
     val subtitleUri by viewModel.subtitleUri.collectAsState()
 
     val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            playWhenReady = true
-        }
+        ExoPlayer.Builder(context)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+            .build()
+            .apply { playWhenReady = true }
     }
 
     DisposableEffect(lifecycleOwner) {
@@ -76,7 +80,7 @@ fun VideoPlayerScreen(
         }
     }
 
-    DisposableEffect(video, dataSourceFactory) {
+    DisposableEffect(video) {
         val encryptedFile = File(video.encryptedFilePath)
         val ivFile = File("${video.encryptedFilePath}.iv")
 

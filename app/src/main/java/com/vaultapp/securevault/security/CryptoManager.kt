@@ -16,7 +16,6 @@ private const val ALGORITHM = KeyProperties.KEY_ALGORITHM_AES
 private const val BLOCK_MODE = KeyProperties.BLOCK_MODE_GCM
 private const val PADDING = KeyProperties.ENCRYPTION_PADDING_NONE
 private const val TRANSFORMATION = "$ALGORITHM/$BLOCK_MODE/$PADDING"
-private const val IV_SIZE = 128
 private const val TAG_LENGTH = 128
 
 @Singleton
@@ -24,10 +23,6 @@ class CryptoManager @Inject constructor() {
 
     private val keyStore: KeyStore by lazy {
         KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
-    }
-
-    private val cipher: Cipher by lazy {
-        Cipher.getInstance(TRANSFORMATION)
     }
 
     init {
@@ -49,11 +44,6 @@ class CryptoManager @Inject constructor() {
             .setBlockModes(BLOCK_MODE)
             .setEncryptionPaddings(PADDING)
             .setKeySize(256)
-            .setUserAuthenticationRequired(true)
-            .setUserAuthenticationParameters(
-                30,
-                KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL
-            )
             .setRandomizedEncryptionRequired(true)
             .build()
 
@@ -65,23 +55,26 @@ class CryptoManager @Inject constructor() {
         return keyStore.getKey(KEY_ALIAS, null) as SecretKey
     }
 
-    fun encrypt(plaintext: ByteArray): EncryptedData {
-        cipher.init(Cipher.ENCRYPT_MODE, getSecretKey())
-        val ciphertext = cipher.doFinal(plaintext)
-        val iv = cipher.iv
-        return EncryptedData(ciphertext, iv)
+    fun encrypt(plaintext: ByteArray): Result<EncryptedData> {
+        return try {
+            val cipher = Cipher.getInstance(TRANSFORMATION)
+            cipher.init(Cipher.ENCRYPT_MODE, getSecretKey())
+            val ciphertext = cipher.doFinal(plaintext)
+            Result.success(EncryptedData(ciphertext, cipher.iv))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
-    fun decrypt(ciphertext: ByteArray, iv: ByteArray): ByteArray {
-        val spec = GCMParameterSpec(TAG_LENGTH, iv)
-        cipher.init(Cipher.DECRYPT_MODE, getSecretKey(), spec)
-        return cipher.doFinal(ciphertext)
-    }
-
-    fun createCipherForBiometric(): Cipher {
-        val cipher = Cipher.getInstance(TRANSFORMATION)
-        cipher.init(Cipher.ENCRYPT_MODE, getSecretKey())
-        return cipher
+    fun decrypt(ciphertext: ByteArray, iv: ByteArray): Result<ByteArray> {
+        return try {
+            val cipher = Cipher.getInstance(TRANSFORMATION)
+            val spec = GCMParameterSpec(TAG_LENGTH, iv)
+            cipher.init(Cipher.DECRYPT_MODE, getSecretKey(), spec)
+            Result.success(cipher.doFinal(ciphertext))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     data class EncryptedData(

@@ -47,7 +47,11 @@ class EncryptedVideoDataSource(
         val encryptedBytes = file.readBytes()
 
         val decryptedBytes = try {
-            cryptoManager.decrypt(encryptedBytes, iv)
+            val result = cryptoManager.decrypt(encryptedBytes, iv)
+            if (result.isFailure) {
+                throw IOException("Decryption failed", result.exceptionOrNull())
+            }
+            result.getOrThrow()
         } catch (e: Exception) {
             throw IOException("Decryption failed", e)
         }

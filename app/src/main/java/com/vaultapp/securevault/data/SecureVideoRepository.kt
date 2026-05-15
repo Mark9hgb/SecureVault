@@ -48,7 +48,11 @@ class SecureVideoRepository @Inject constructor(
             val sourceBytes = inputStream.use { it.readBytes() }
             inputStream.close()
 
-            val encryptedData = cryptoManager.encrypt(sourceBytes)
+            val encryptedResult = cryptoManager.encrypt(sourceBytes)
+            if (encryptedResult.isFailure) {
+                return@withContext Result.failure(encryptedResult.exceptionOrNull() ?: Exception("Encryption failed"))
+            }
+            val encryptedData = encryptedResult.getOrThrow()
 
             val encryptedFile = File(encryptedDir, "${System.currentTimeMillis()}_encrypted.bin")
             FileOutputStream(encryptedFile).use { it.write(encryptedData.ciphertext) }
@@ -132,8 +136,9 @@ class SecureVideoRepository @Inject constructor(
             if (!encryptedFile.exists()) return null
 
             val encryptedBytes = encryptedFile.readBytes()
-            val decryptedBytes = cryptoManager.decrypt(encryptedBytes, video.iv)
-            java.io.ByteArrayInputStream(decryptedBytes)
+            val result = cryptoManager.decrypt(encryptedBytes, video.iv)
+            if (result.isFailure) return null
+            java.io.ByteArrayInputStream(result.getOrThrow())
         } catch (e: Exception) {
             null
         }

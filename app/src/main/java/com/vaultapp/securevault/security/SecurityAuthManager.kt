@@ -5,7 +5,6 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
-import javax.crypto.Cipher
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -18,18 +17,37 @@ class SecurityAuthManager @Inject constructor(
 
     private val biometricManager: BiometricManager = BiometricManager.from(context)
 
+    fun getAuthenticationStatus(): Int {
+        return biometricManager.canAuthenticate(
+            BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        )
+    }
+
     fun canAuthenticate(): Boolean {
-        return when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)) {
-            BiometricManager.BIOMETRIC_SUCCESS -> true
-            else -> false
+        return getAuthenticationStatus() == BiometricManager.BIOMETRIC_SUCCESS
+    }
+
+    fun getErrorDescription(status: Int): String {
+        return when (status) {
+            BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ->
+                "No biometric hardware available. Device PIN/pattern will be used."
+            BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE ->
+                "Biometric hardware is currently unavailable."
+            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED ->
+                "No biometric credentials enrolled. Please set up a device PIN or biometric."
+            BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED ->
+                "Security update required for biometric authentication."
+            BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED ->
+                "Biometric authentication is not supported on this device."
+            else -> "Unknown authentication error."
         }
     }
 
     suspend fun authenticate(
         activity: FragmentActivity,
         title: String = "Authenticate to Unlock Vault",
-        subtitle: String = "Use your biometric credentials",
-        cipher: Cipher? = null
+        subtitle: String = "Use your device credentials"
     ): AuthResult = suspendCoroutine { continuation ->
         val executor = ContextCompat.getMainExecutor(context)
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
@@ -47,7 +65,7 @@ class SecurityAuthManager @Inject constructor(
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    continuation.resume(AuthResult.Success(result.cryptoObject?.cipher))
+                    continuation.resume(AuthResult.Success)
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -62,16 +80,12 @@ class SecurityAuthManager @Inject constructor(
             }
         )
 
-        if (cipher != null) {
-            biometricPrompt.authenticate(promptInfo, BiometricPrompt.CryptoObject(cipher))
-        } else {
-            biometricPrompt.authenticate(promptInfo)
-        }
+        biometricPrompt.authenticate(promptInfo)
     }
 
     sealed class AuthResult {
-        data class Success(val cipher: Cipher?) : AuthResult()
+        data object Success : AuthResult()
         data class Error(val errorCode: Int, val message: String) : AuthResult()
-        object Failed : AuthResult()
+        data object Failed : AuthResult()
     }
 }
