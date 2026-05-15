@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Secure Vault</string>
+    <string name="auth_title">Unlock Secure Vault</string>
+    <string name="auth_subtitle">Authenticate to access your videos</string>
+    <string name="vault_title">Secure Vault</string>
+    <string name="vault_empty">Your vault is empty</string>
+    <string name="vault_empty_hint">Tap the + button to import encrypted videos</string>
+    <string name="import_video">Import Video</string>
+    <string name="delete_video">Delete Video</string>
+    <string name="delete_confirm">Are you sure you want to permanently delete this video? This action cannot be undone.</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="security_warning">Security Warning</string>
+    <string name="load_subtitles">Load Subtitles</string>
+    <string name="back">Back</string>
+</resources>
