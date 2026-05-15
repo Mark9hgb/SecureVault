@@ -23,8 +23,15 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Setup Gradle Wrapper
+        run: |
+          if [ ! -f "./gradlew" ]; then
+            curl -L "https://services.gradle.org/distributions/gradle-8.9-bin.zip" -o gradle.zip
+            unzip -q gradle.zip
+            ./gradle-8.9/bin/gradle wrapper --gradle-version 8.9
+            rm -rf gradle.zip gradle-8.9
+          fi
+          chmod +x gradlew
 
       - name: Build Release APK
         run: ./gradlew assembleRelease --no-daemon
