@@ -4,18 +4,13 @@ import android.net.Uri
 import androidx.media3.common.C
 import androidx.media3.datasource.BaseDataSource
 import androidx.media3.datasource.DataSpec
-import androidx.media3.datasource.TransferListener
 import com.vaultapp.securevault.security.CryptoManager
 import java.io.IOException
-import java.io.InputStream
 import java.io.File
-import javax.crypto.CipherInputStream
-import javax.crypto.spec.GCMParameterSpec
 
 class EncryptedVideoDataSource(
-    private val cryptoManager: CryptoManager,
-    listener: TransferListener? = null
-) : BaseDataSource(/* isNetwork = */ false, listener) {
+    private val cryptoManager: CryptoManager
+) : BaseDataSource(/* isNetwork = */ false) {
 
     private var inputStream: InputStream? = null
     private var bytesRemaining: Long = 0
@@ -25,15 +20,8 @@ class EncryptedVideoDataSource(
         private val cryptoManager: CryptoManager
     ) : androidx.media3.datasource.DataSource.Factory {
 
-        private var transferListener: TransferListener? = null
-
-        fun setTransferListener(listener: TransferListener?): Factory {
-            this.transferListener = listener
-            return this
-        }
-
         override fun createDataSource(): EncryptedVideoDataSource {
-            return EncryptedVideoDataSource(cryptoManager, transferListener)
+            return EncryptedVideoDataSource(cryptoManager)
         }
     }
 
